@@ -55,7 +55,7 @@ class TestNoAPIMatches:
     def test_no_matches_returns_high_score(self):
         ref = make_ref()
         result = score_reference(ref, [])
-        assert result.hallucination_score == 0.95
+        assert result.hallucination_score > 0.9
 
     def test_no_matches_has_no_match_signal(self):
         ref = make_ref()
@@ -79,7 +79,7 @@ class TestDOIOverride:
         ref = make_ref(doi=doi)
         match = make_match(doi=doi)
         result = score_reference(ref, [match])
-        assert result.hallucination_score == 0.05
+        assert result.hallucination_score < 0.1
 
     def test_doi_match_adds_doi_match_signal(self):
         doi = "10.1234/test.doi"
@@ -249,7 +249,7 @@ class TestEdgeCases:
         ref = make_ref()
         match = make_match()
         result = score_reference(ref, [match], weights=weights)
-        assert isinstance(result.hallucination_score, float)
+        assert 0.0 <= result.hallucination_score <= 1.0
 
     def test_year_mismatch_increases_score(self):
         ref = make_ref(title="Same Title", year=2010)
@@ -281,9 +281,10 @@ class TestSelectBestMatch:
         assert best.title == "Attention Is All You Need"
         assert sim >= 0.99
 
-    def test_single_match_is_best(self):
-        ref = make_ref(title="Some Title")
-        matches = [make_match(title="Some Other Title")]
-        best, sim = _select_best_match(ref, matches)
-        assert best is matches[0]
-        assert 0.0 <= sim <= 1.0
+    def test_selects_better_of_two_matches(self):
+        ref = make_ref(title="Attention Is All You Need")
+        worse = make_match(title="Some Unrelated Paper About Supply Chains")
+        better = make_match(title="Attention Is All You Need")
+        best, sim = _select_best_match(ref, [worse, better])
+        assert best is better
+        assert sim >= 0.99

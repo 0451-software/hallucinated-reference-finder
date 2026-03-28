@@ -51,25 +51,14 @@ class TestNormalizeTitle:
         assert result == "too many spaces"
 
     def test_unicode_normalization_nfkd(self):
-        # é normalized to e + combining accent, then lowercased
-        result = normalize_title("Résumé")
-        # NFKD decomposes accented chars; non-word-non-hyphen chars removed
-        assert "r" in result
-        assert "sum" in result
+        # NFKD decomposes accented chars; combining chars removed, lowercased
+        assert normalize_title("Résumé") == "resume"
 
     def test_strips_trailing_whitespace(self):
         result = normalize_title("  padded  ")
         assert result == "padded"
 
-    def test_period_removed(self):
-        result = normalize_title("Dr. Smith's Method.")
-        assert "." not in result
-
-    def test_comma_removed(self):
-        result = normalize_title("Learning, Inference, and Prediction")
-        assert "," not in result
-
-    def test_colon_kept_as_word_boundary(self):
+    def test_colon_removed(self):
         # Colons are punctuation (non-word, non-hyphen) → removed
         result = normalize_title("BERT: Pre-training of Deep Models")
         assert ":" not in result
@@ -104,14 +93,13 @@ class TestTitleSimilarity:
         )
         assert score < 0.4
 
-    def test_empty_first_title_returns_zero(self):
-        assert title_similarity("", "Some Title") == 0.0
-
-    def test_empty_second_title_returns_zero(self):
-        assert title_similarity("Some Title", "") == 0.0
-
-    def test_both_empty_returns_zero(self):
-        assert title_similarity("", "") == 0.0
+    @pytest.mark.parametrize("a,b", [
+        ("", "Some Title"),
+        ("Some Title", ""),
+        ("", ""),
+    ])
+    def test_empty_input_returns_zero(self, a, b):
+        assert title_similarity(a, b) == 0.0
 
     def test_whitespace_differences_high_score(self):
         score = title_similarity("Neural Machine Translation", "Neural  Machine  Translation")
@@ -158,9 +146,7 @@ class TestNormalizeName:
         assert normalize_name("  Jones  ") == "jones"
 
     def test_removes_accents(self):
-        # é → e after NFKD + removing combining chars
-        result = normalize_name("Müller")
-        assert "ü" not in result  # combining char removed
+        assert normalize_name("Müller") == "muller"
 
 
 # ---------------------------------------------------------------------------

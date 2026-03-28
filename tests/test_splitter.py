@@ -42,7 +42,7 @@ class TestSplitReferences:
             "Brown, T., Mann, B., Ryder, N. (2020). Language models are few-shot learners. NeurIPS 2020.\n"
         )
         result = split_references(text)
-        assert len(result) >= 2
+        assert len(result) == 3
 
     def test_numbered_references_square_brackets(self):
         text = (
@@ -253,7 +253,7 @@ class TestMergeFragments:
             "Author, A. and Author, B. 2020. Title of paper. In",
             "Proceedings of the Conference on Things, pages 1–10.",
         ]
-        # Second starts with "Proceedings" — _FRAGMENT_START should match
+        # "Proceedings" matches the fragment pattern — should be merged into prior ref
         result = _merge_fragments(refs)
         assert len(result) == 1
         assert "Proceedings" in result[0]
