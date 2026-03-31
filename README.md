@@ -222,10 +222,21 @@ The tool respects rate limits automatically with per-API throttling and exponent
 ## Testing
 
 ```bash
-# Generate test PDFs (requires pdflatex)
-python tests/fixtures/generate_test_pdf.py
+# Run unit tests (no external dependencies — runs in CI)
+pytest tests/test_matchers.py tests/test_scorer.py tests/test_splitter.py -v
 
-# Run extraction tests (synthetic papers with known references)
+# Generate fixture PDFs for integration tests (requires pdflatex)
+# macOS: brew install --cask basictex && sudo tlmgr install acl latexmk lipsum
+# Linux: sudo apt install texlive-latex-recommended texlive-publishers
+python tests/fixtures/generate_test_pdf.py       # basic real/hallucinated PDFs
+# Compile additional fixture shapes (from tests/fixtures/):
+#   pdflatex test_paper_long_refs.tex
+#   pdflatex test_paper_limitations.tex
+#   pdflatex test_paper_numbered_refs.tex        # IEEE numbered style
+#   pdflatex test_paper_unicode_authors.tex      # non-ASCII author names
+#   pdflatex test_paper_arxiv_style.tex          # arXiv refs, et al., DOIs
+
+# Run integration tests (requires fixture PDFs compiled above)
 python tests/test_extraction.py
 
 # Download 10 real ACL papers from arxiv for ground truth testing
